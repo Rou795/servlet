@@ -3,10 +3,8 @@ package ru.netology.repository;
 import ru.netology.exception.NotFoundException;
 import ru.netology.model.Post;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -14,18 +12,20 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class PostRepository {
 
   List<Post> list = new CopyOnWriteArrayList<>(new ArrayList<>());
+  ConcurrentHashMap<Long, Post> posts = new ConcurrentHashMap<>();
   AtomicInteger counter = new AtomicInteger(0);
 
-  public List<Post> all() { return list; }
+  public List<Post> all() { return posts.values().stream().toList(); }
 
   public Optional<Post> getById(long id) {
-    return list.stream().filter(post -> post.getId() == id).findFirst();
+    return Optional.ofNullable(posts.get(id));
   }
 
   public Post save(Post post) {
     int index = counter.incrementAndGet();
     post.setId(index);
-    list.add(post);
+    posts.put(post.getId(), post);
+    //list.add(post);
     return post;
   }
 
@@ -40,8 +40,11 @@ public class PostRepository {
   }
 
   public void removeById(long id) {
-    if (this.getById(id).isPresent()) {
-      list.remove(this.getById(id).get());
+    Optional<Post> post = this.getById(id);
+    if (post.isPresent()) {
+      posts.remove(post.get());
+    } else {
+      throw new NotFoundException("We have not post with this id.");
     }
   }
 }
