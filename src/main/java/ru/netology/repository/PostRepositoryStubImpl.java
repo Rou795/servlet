@@ -16,7 +16,7 @@ public class PostRepositoryStubImpl implements PostRepository {
   ConcurrentHashMap<Long, Post> posts = new ConcurrentHashMap<>();
   AtomicInteger counter = new AtomicInteger(0);
   @Override
-  public List<Post> all() { return posts.values().stream().toList(); }
+  public List<Post> all() { return posts.values().stream().filter(Post::isActual).toList(); }
 
   @Override
   public Optional<Post> getById(long id) {
@@ -47,7 +47,7 @@ public class PostRepositoryStubImpl implements PostRepository {
   public void removeById(long id) {
     Optional<Post> post = this.getById(id);
     if (post.isPresent()) {
-      posts.remove(post.get());
+      post.get().setStatus(false);
     } else {
       throw new NotFoundException("We have not post with this id.");
     }
